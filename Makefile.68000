@@ -23,16 +23,19 @@ COPTS=-m68000 \
 	-fdata-sections \
 	-nostdlib \
 	-std=c99 \
-	-DNOLIBC_STATIC_PIE \
 	-Os \
 	-I_build/headers/include
-
-
 
 %.o: %.c
 	$(CC) $(COPTS) \
 	 -include $(NOLIBCDIR)/nolibc.h \
 	 -c -o $@ $<
+
+%.pie.o: %.c
+	$(CC) $(COPTS) \
+	-include $(NOLIBCDIR)/nolibc.h \
+	-fpie \
+	-c -o $@ $<
 
 init: init.o
 	$(CC) $(COPTS) $^ -o $@
@@ -40,22 +43,23 @@ init: init.o
 smolsh: smolsh.o
 	$(CC) $(COPTS) $^ -o $@
 
-define ELF_BUILD
-$(1).elf.dbg: $(1).o
-	$$(BFDLD) \
+# stop deleting my dbg elf!
+.SECONDARY:
+
+%.elf.dbg: %.pie.o
+	$(BFDLD) \
 		--gc-sections \
 		--print-gc-sections \
 		--no-dynamic-linker \
 		--hash-style=gnu \
-		-pie $$^ -o $$@
+		-pie $^ -o $@
 
-$(1).elf: $(1).elf.dbg
-	$$(STRIP) $$< -o $$@
-endef
+%.elf: %.elf.dbg
+	$(STRIP) $< -o $@
 
-$(eval $(call ELF_BUILD,init))
-$(eval $(call ELF_BUILD,smolsh))
+.PHONY: elfs
+elfs: init.elf smolsh.elf
 
 .PHONY: clean
 clean:
-	rm -f init smolsh *.o *.gdb
+	rm -f init smolsh *.o *.gdb *.elf *.elf.dbg
