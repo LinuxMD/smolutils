@@ -23,4 +23,4 @@ COPTS=\
 	$(STRIP) $< -o $@
 
 .PHONY: elfs
-elfs: smolsh.x86_64.elf
+elfs: $(addsuffix .x86_64.elf,$(PROGS))

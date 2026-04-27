@@ -13,3 +13,5 @@ endif
 CC=$(CROSS_COMPILE)gcc
 BFDLD=$(CROSS_COMPILE)ld.bfd
 STRIP=$(CROSS_COMPILE)strip
+
+PROGS=init smolsh dmesg ls cat mkdir sha256sum
