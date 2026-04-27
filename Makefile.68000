@@ -1,6 +1,6 @@
 include common.mk
 
-all: init smolsh
+all: elfs
 
 # Remove any builtin targets...
 .SUFFIXES:
@@ -10,29 +10,13 @@ all: init smolsh
 
 
 COPTS=-m68000 \
-	-g \
+	-ggdb \
 	-flto \
 	-nostdlib \
 	-std=c99 \
 	-Os \
+	-D R_68K_RELATIVE=22 \
 	-I_build/headers/include
-
-%.o: %.c
-	$(CC) $(COPTS) \
-	 -include $(NOLIBCDIR)/nolibc.h \
-	 -c -o $@ $<
-
-%.pie.o: %.c
-	$(CC) $(COPTS) \
-	-include $(NOLIBCDIR)/nolibc.h \
-	-fpie \
-	-c -o $@ $<
-
-init: init.o
-	$(CC) $(COPTS) $^ -o $@
-
-smolsh: smolsh.o
-	$(CC) $(COPTS) $^ -o $@
 
 # stop deleting my dbg elf!
 .SECONDARY:
@@ -46,17 +30,19 @@ smolsh: smolsh.o
 #		--undefined=_start_c \
 #		-pie $^ -o $@
 
-%.elf.dbg: %.c
+
+#	-Wl,--no-dynamic-linker \
+
+
+%.68000.elf.dbg: %.c
 	$(CC) $(COPTS) \
 	-include $(NOLIBCDIR)/nolibc.h \
-	-Wl,--no-dynamic-linker \
-	-Wl,--undefined=_relocate \
 	-Wl,--hash-style=gnu \
 	-Wl,-z,max-page-size=4 \
-	-pie \
-	-o $@ $<
+	-pie -Wl,--no-dynamic-linker \
+	-o $@ $< -lgcc
 
-%.elf: %.elf.dbg
+%.68000.elf: %.68000.elf.dbg
 	$(STRIP) $< -o $@
 
 .PHONY: elfs
@@ -64,4 +50,4 @@ elfs: $(addsuffix .68000.elf,$(PROGS))
 
 .PHONY: clean
 clean:
-	rm -f init smolsh *.o *.gdb *.elf *.elf.dbg
+	rm -f init smolsh *.o *.gdb *.68000.elf *.68000.elf.dbg
