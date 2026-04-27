@@ -1,6 +1,9 @@
 _build:
 	mkdir $@
 
+NOLIBCBRANCH=nolibc-staticpie-20260427
+
+
 TOOLCHAIN_URL="https://www.kernel.org/pub/tools/crosstool/files/bin/x86_64/15.2.0"
 TOOLCHAIN_M68K=x86_64-gcc-15.2.0-nolibc-m68k-linux.tar.xz
 TOOLCHAIN_DIR=gcc-15.2.0-nolibc
@@ -15,7 +18,7 @@ _build/.stamp.toolchain_m68k_extracted: _build/$(TOOLCHAIN_M68K)
 	touch $@
 
 _build/.stamp.linux_cloned:
-	git -C _build clone --depth 1 --branch m68kdt_mochi20260114 https://github.com/fifteenhex/linux.git
+	git -C _build clone --depth 1 --branch $(NOLIBCBRANCH) https://github.com/fifteenhex/linux.git
 	touch $@
 
 _build/.stamp.linux_headers: _build/.stamp.linux_cloned
