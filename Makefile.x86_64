@@ -2,21 +2,18 @@ include common.mk
 
 COPTS=\
 	-ggdb \
-	-flto \
 	-nostdlib \
 	-std=c99 \
+	-fpie \
+	-flto \
 	-Os
-
-#	-Wl,--no-dynamic-linker \
-
 
 %.x86_64.elf.dbg: %.c
 	$(CC) $(COPTS) \
 	-include $(NOLIBCDIR)/nolibc.h \
-	-Wl,--undefined=_relocate \
 	-Wl,--hash-style=gnu \
-	-Wl,--no-dynamic-linker \
-	-pie \
+	-static-pie \
+	-D R_AMD64_RELATIVE=8 \
 	-o $@ $<
 
 %.x86_64.elf: %.x86_64.elf.dbg
