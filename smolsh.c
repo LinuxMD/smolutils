@@ -138,6 +138,38 @@ static bool try_absolute(const char *cmd, char **path)
 	return false;
 }
 
+static int parse_handle_stdout_redirection(char *str, char **stdout_path)
+{
+	bool append = false;
+	char next;
+
+	/* terminate the string just in case */
+	*str = '\0';
+
+	/* str pointed at the first > which we just killed */
+	str++;
+
+	next = *str;
+
+	if (next == '>') {
+		verbose("redirection is appending\n");
+		append = true;
+		str++;
+	}
+
+	/* fix me, this is just skipping spaces */
+	while (*str == ' ') {
+		verbose("skipping whitespace\n");
+		str++;
+	}
+
+	verbose("str should now be the start of the path\n");
+
+	*stdout_path = str;
+
+	return 0;
+}
+
 static int toktoktok(char *str, size_t len,
 		     char** tokens, unsigned max_tokens, unsigned *num_tokens,
 		     char** stdout)
@@ -151,23 +183,23 @@ static int toktoktok(char *str, size_t len,
 	for (i = 0; i < len; i++) {
 		char ch = *str;
 
-		/* Don't support this */
-		if (ch == ';') {
+		/* Don't support this crazy stuff */
+		if (ch == ';' || ch == '<' | ch == '\\') {
 			return -1;
 		}
 
+		/* Barely, just, support redirectly stdout */
 		if (ch == '>') {
-			verbose("Redirection started at %d\n", i);
+			int ret;
 
-			// FIXME terminate previous token if needed
+			// FIXME terminate previous token if needed because there wasn't white space
 			*str = '\0';
 
-			// FIXME properly eat all white space */
-			str++;
-			if (*str == ' ')
-				str++;
+			verbose("Redirection started at %d\n", i);
+			ret = parse_handle_stdout_redirection(str, &redirection_stdout);
+			if (ret)
+				return ret;
 
-			redirection_stdout = str;
 			printf("oh crap, redirection! %s\n", redirection_stdout);
 			break;
 		}
@@ -231,7 +263,7 @@ int main (int argc, char **argv, char **envp)
 		int len;
 		/* For redirection */
 		int _stdout = STDOUT_FILENO;
-		__cleanup_fd int redirected_stdout = -1;
+		int redirected_stdout __cleanup_fd = -1;
 
 		do_prompt();
 
