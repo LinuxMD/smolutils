@@ -40,6 +40,18 @@ static int cd_handler(int argc, char **argv)
 	return 0;
 }
 
+static int pwd_handler(int argc, char **argv)
+{
+	char cwd[1024];
+
+	getcwd(cwd, ARRAY_SIZE(cwd));
+
+	printf("%s\n", cwd);
+
+	return 0;
+}
+
+
 static int exit_handler(int argc, char **argv)
 {
 	keeprocking = false;
@@ -49,6 +61,7 @@ static int exit_handler(int argc, char **argv)
 
 struct builtin builtins[] = {
 	{ "cd", cd_handler },
+	{ "pwd", pwd_handler },
 	{ "exit", exit_handler },
 };
 
