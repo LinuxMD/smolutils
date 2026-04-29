@@ -28,4 +28,10 @@ off_t file_size(int fd) {
 	return st.st_size;
 }
 
+/* String matching */
+
+/* Does a string start with this char array? */
+#define STARTS_WITH(_string, _chararray) \
+	(strncmp(_string, _chararray, STRLEN(_chararray)) == 0)
+
 #endif /* _SMOLUTILS_COMMON_H */
