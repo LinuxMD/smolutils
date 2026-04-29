@@ -5,6 +5,12 @@
 
 #define SHELL_PATH "/bin/sh"
 
+static const char cmdline_opt_prefix[] = "smolinit.";
+static const char cmdline_opt_getty[] = "getty=";
+
+static const char *gettys[16] = { 0 };
+static unsigned num_gettys = 0;
+
 static void parse_cmdline(int argc, char **argv)
 {
 	int i;
@@ -12,8 +18,26 @@ static void parse_cmdline(int argc, char **argv)
 	debug("cmdline args:\n");
 
 	/* First arg will be the program name, skip that */
-	for (i = 1; i < argc; i++)
-		printf("%s\n", argv[i]);
+	for (i = 1; i < argc; i++) {
+		const char *arg = argv[i];
+
+		debug("%s\n", arg);
+
+		if (strncmp(arg, cmdline_opt_prefix, STRLEN(cmdline_opt_prefix)) == 0) {
+			const char *opt = arg + STRLEN(cmdline_opt_prefix);
+
+			if (strncmp(opt, cmdline_opt_getty, STRLEN(cmdline_opt_getty)) == 0) {
+				const char *getty = opt + STRLEN(cmdline_opt_getty);
+
+				debug("Will start getty on %s\n", getty);
+				/*
+				 * I guess its safe to just point the argv memory to avoid
+				 * wasting memory copying strings.
+				 */
+				gettys[num_gettys++] = getty;
+			}
+		}
+	}
 }
 
 static void parse_environment(char **envp)
