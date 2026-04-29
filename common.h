@@ -24,4 +24,4 @@ off_t file_size(int fd) {
 	return st.st_size;
 }
 
-#endif
+#endif /* _SMOLUTILS_COMMON_H */
