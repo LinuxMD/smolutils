@@ -7,6 +7,7 @@ int main(int argc, char **argv, char **envp)
 {
 	const char *shell_path;
 	const char *tty_path;
+	pid_t pid;
 
 	if (argc != 3)
 		return 1;
@@ -17,26 +18,24 @@ int main(int argc, char **argv, char **envp)
 	debug("Starting getty on %s with shell %s\n",
 		tty_path, shell_path);
 
-        while (true) {
-		pid_t pid = vfork();
+	pid = vfork();
 
-                /* We are getty */
-		if (pid) {
-			wait(NULL);
-		}
+	if (!pid) {
 		/* We are the new process */
-		else {
-                        char * const newargv[] = {
-                                "sh",
-                                NULL
-                        };
-                        char *newenviron[] = { NULL };
+		char * const newargv[] = {
+			"sh",
+			NULL
+		};
+		char *newenviron[] = { NULL };
 
-                        execve(shell_path, newargv, newenviron);
-                        printf("execve failed\n");
-                        break;
-                }
-        }
+		execve(shell_path, newargv, newenviron);
+		printf("execve failed\n");
+	}
+
+	/* We are still the getty, wait for the shell to exit */
+	wait(NULL);
+
+	debug("%s exited\n", tty_path);
 
 	return 0;
 }
