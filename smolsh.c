@@ -28,10 +28,10 @@ static void run_cmd(const char *bin, char * const *argv)
 /* Real builtins */
 struct builtin {
 	const char *cmd;
-	int (*handler)(int argc, char **argv);
+	int (*handler)(int argc, char **argv, int stdout);
 };
 
-static int cd_handler(int argc, char **argv)
+static int cd_handler(int argc, char **argv, int stdout)
 {
 	char *newdir = argv[1];
 
@@ -40,7 +40,20 @@ static int cd_handler(int argc, char **argv)
 	return 0;
 }
 
-static int pwd_handler(int argc, char **argv)
+static int echo_handler(int argc, char **argv, int stdout)
+{
+	char tmp[1024];
+	char *str = argv[1];
+	int len;
+
+	len = sprintf(tmp, "%s\n", str);
+
+	write(stdout, tmp, len);
+
+	return 0;
+}
+
+static int pwd_handler(int argc, char **argv, int stdout)
 {
 	char cwd[1024];
 
@@ -52,7 +65,7 @@ static int pwd_handler(int argc, char **argv)
 }
 
 
-static int exit_handler(int argc, char **argv)
+static int exit_handler(int argc, char **argv, int stdout)
 {
 	keeprocking = false;
 
@@ -61,11 +74,12 @@ static int exit_handler(int argc, char **argv)
 
 struct builtin builtins[] = {
 	{ "cd", cd_handler },
+	{ "echo", echo_handler },
 	{ "pwd", pwd_handler },
 	{ "exit", exit_handler },
 };
 
-static bool try_builtin(char **tokens, unsigned num_tokens)
+static bool try_builtin(char **tokens, unsigned num_tokens, int stdout)
 {
 	const char *cmd = tokens[0];
 	int i;
@@ -74,7 +88,7 @@ static bool try_builtin(char **tokens, unsigned num_tokens)
 		struct builtin *bi = &builtins[i];
 
 		if (strcmp(cmd, bi->cmd) == 0) {
-			bi->handler(num_tokens, tokens);
+			bi->handler(num_tokens, tokens, stdout);
 			return true;
 		}
 	}
@@ -124,8 +138,11 @@ static bool try_absolute(const char *cmd, char **path)
 	return false;
 }
 
-static void toktoktok(char *str, size_t len, char** tokens, unsigned max_tokens, unsigned *num_tokens)
+static int toktoktok(char *str, size_t len,
+		     char** tokens, unsigned max_tokens, unsigned *num_tokens,
+		     char** stdout)
 {
+	char *redirection_stdout = NULL;
 	unsigned int token_count = 0;
 	unsigned int token_len = 0;
 	char *token_start;
@@ -134,6 +151,28 @@ static void toktoktok(char *str, size_t len, char** tokens, unsigned max_tokens,
 	for (i = 0; i < len; i++) {
 		char ch = *str;
 
+		/* Don't support this */
+		if (ch == ';') {
+			return -1;
+		}
+
+		if (ch == '>') {
+			verbose("Redirection started at %d\n", i);
+
+			// FIXME terminate previous token if needed
+			*str = '\0';
+
+			// FIXME properly eat all white space */
+			str++;
+			if (*str == ' ')
+				str++;
+
+			redirection_stdout = str;
+			printf("oh crap, redirection! %s\n", redirection_stdout);
+			break;
+		}
+
+		/* Normal part */
 		if (ch != ' ' && ch != '\0') {
 			/* Start of a new token */
 			if (token_len == 0) {
@@ -163,7 +202,10 @@ static void toktoktok(char *str, size_t len, char** tokens, unsigned max_tokens,
 		str++;
 	}
 
+	*stdout = redirection_stdout;
 	*num_tokens = token_count;
+
+	return 0;
 }
 
 static void do_prompt(void)
@@ -179,12 +221,17 @@ int main (int argc, char **argv, char **envp)
 {
 	char line[MAX_CMDLINE];
 	char *tokens[MAX_TOKENS + 1];
+	char *stdout;
 	unsigned num_tokens;
+	int ret;
 
 	while (keeprocking) {
 		char *path;
 		char *cmd;
 		int len;
+		/* For redirection */
+		int _stdout = STDOUT_FILENO;
+		__cleanup_fd int redirected_stdout = -1;
 
 		do_prompt();
 
@@ -195,7 +242,22 @@ int main (int argc, char **argv, char **envp)
 
 		verbose("Got command line: \"%s\"\n", line);
 
-		toktoktok(line, len, tokens, ARRAY_SIZE(tokens), &num_tokens);
+		ret = toktoktok(line, len,
+				tokens, ARRAY_SIZE(tokens), &num_tokens,
+				&stdout);
+		if (ret) {
+			printf("Syntax error\n");
+			continue;
+		}
+
+		if (stdout) {
+			redirected_stdout = open(stdout, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+			if (redirected_stdout < 0) {
+				printf("failed to open file for redirection: %d\n", _stdout);
+				continue;
+			}
+			_stdout = redirected_stdout;
+		}
 
 		/* No tokens? */
 		if (!num_tokens)
@@ -206,7 +268,7 @@ int main (int argc, char **argv, char **envp)
 		/* We'll use the tokens as the argv, so add the terminator */
 		tokens[num_tokens] = NULL;
 
-		if (try_builtin(tokens, num_tokens))
+		if (try_builtin(tokens, num_tokens, _stdout))
 			continue;
 
 		if (try_fixed(cmd, &path)) {

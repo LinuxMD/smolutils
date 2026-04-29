@@ -39,6 +39,16 @@ off_t file_size(int fd) {
 	return st.st_size;
 }
 
+static void cleanup_fd(int *_fd)
+{
+        int fd = *_fd;
+
+        if (fd >= 0)
+                close(fd);
+}
+
+#define __cleanup_fd __attribute__((cleanup(cleanup_fd)))
+
 /* String matching */
 
 /* Does a string start with this char array? */
