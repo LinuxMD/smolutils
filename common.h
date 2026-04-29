@@ -15,6 +15,8 @@
 #define debug(...)
 #endif
 
+#define error(...) printf(__VA_ARGS__)
+
 /* File stuff */
 
 off_t file_size(int fd) {
