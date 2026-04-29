@@ -5,7 +5,7 @@ Like coreutils but smol.
 
 ## Why?!
 
-For very nommu targets even uclibc + busybox isn't very usable:
+For nommu targets even uclibc + busybox isn't very usable:
 
 - For nommu every process loads its own copy of everything because there
   is no virtual addressing to allow sharing of common physical pages so
