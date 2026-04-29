@@ -28,8 +28,10 @@ COPTS += -m68000 \
 
 STATICPIE=-fpie -pie -Wl,--no-dynamic-linker
 
-#	-Wl,-z,max-page-size=4 \
-
+# This reduces the size of the binaries by putting segments
+# with different permissions on the same 4K page which you
+# might care about if you have an MMU.
+COPTS += -Wl,-z,max-page-size=4
 
 %.68000.elf.dbg: %.c
 	$(CC) $(COPTS) \
