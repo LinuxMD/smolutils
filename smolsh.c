@@ -7,17 +7,19 @@
 #define MAX_TOKENS 16
 
 /* These aren't really builtin's, this just quicker lookup */
-static const char builtin_ls[] = "ls";
-static const char builtin_dmesg[] = "dmesg";
-static const char builtin_cat[] = "cat";
-static const char builtin_mkdir[] = "mkdir";
+struct fixed_path {
+	const char *cmd;
+	const char *path;
+};
 
-static const char ls_path[] = "/bin/ls";
-static const char dmesg_path[] = "/bin/dmesg";
-static const char cat_path[] = "/bin/cat";
-static const char mkdir_path[] = "/bin/mkdir";
+struct fixed_path fixed[] = {
+	{ "ls", "/bin/ls" },
+	{ "dmesg", "/bin/dmesg" },
+	{ "cat", "/bin/cat" },
+	{ "mkdir", "/bin/mkdir" },
+};
 
-static void run_cmd(const char *bin)
+static void run_cmd(const char *bin, char * const *argv)
 {
 	pid_t pid = vfork();
 
@@ -27,29 +29,23 @@ static void run_cmd(const char *bin)
 	}
 	/* We are the new process */
 	else {
-		char * const newargv[] = {
-			bin,
-                        NULL
-		};
 		char *newenviron[] = { NULL };
 
-		execve(bin, newargv, newenviron);
+		execve(bin, argv, newenviron);
 		printf("execve failed\n");
 	}
 }
 
-static bool try_builtin(const char *cmdline, char **path)
+static bool try_builtin(const char *cmd, char **path)
 {
-	const char *_path = NULL;
+	int i;
 
-	if (STARTS_WITH(cmdline, builtin_ls))
-		_path = ls_path;
-	else if (STARTS_WITH(cmdline, builtin_dmesg))
-		_path = dmesg_path;
-
-	if (_path) {
-		*path = _path;
-		return true;
+	for (i = 0; i < ARRAY_SIZE(fixed); i++) {
+		struct fixed_path *fp = &fixed[i];
+		if (strcmp(cmd, fp->cmd) == 0) {
+			*path = fp->path;
+			return true;
+		}
 	}
 
 	return false;
@@ -100,7 +96,7 @@ static void toktoktok(char *str, size_t len, char** tokens, unsigned max_tokens,
 int main (int argc, char **argv, char **envp)
 {
 	char line[MAX_CMDLINE];
-	char *tokens[MAX_TOKENS];
+	char *tokens[MAX_TOKENS + 1];
 	unsigned num_tokens;
 
 	while (1) {
@@ -118,14 +114,17 @@ int main (int argc, char **argv, char **envp)
 
 		toktoktok(line, len, tokens, ARRAY_SIZE(tokens), &num_tokens);
 
-		/* mm */
+		/* No tokens? */
 		if (!num_tokens)
 			continue;
 
 		cmd = tokens[0];
 
+		/* We'll use the tokens as the argv, so add the terminator */
+		tokens[num_tokens] = NULL;
+
 		if (try_builtin(cmd, &path)) {
-			run_cmd(path);
+			run_cmd(path, tokens);
 		}
 		else
 			printf("Sorry, don't know how to: \"%s\"\n", cmd);
