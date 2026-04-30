@@ -49,6 +49,49 @@ static void cleanup_fd(int *_fd)
 
 #define __cleanup_fd __attribute__((cleanup(cleanup_fd)))
 
+static void cleanup_dir(DIR **_dir)
+{
+	DIR *dir = *_dir;
+
+	if (dir)
+		closedir(dir);
+}
+
+#define __cleanup_dir __attribute__((cleanup(cleanup_dir)))
+
+static int iterate_dir(const char *path, int (*cb)(const char *name, void *priv), void *priv)
+{
+	struct dirent e, *result;
+	DIR __cleanup_dir *dir = NULL;
+
+        dir = opendir(path);
+        if (!dir)
+                return -1;
+
+        while ((readdir_r(dir, &e, &result) == 0) && result) {
+                const char *name = e.d_name;
+		int ret;
+
+                if (strcmp(name, ".") == 0)
+                        continue;
+
+                if (strcmp(name, "..") == 0)
+                        continue;
+
+		ret = cb(name, priv);
+
+		/* done */
+		if (ret > 0)
+			return 1;
+
+		/* error */
+		if (ret < 0)
+			return ret;
+        }
+
+	return 0;
+}
+
 /* String matching */
 
 /* Does a string start with this char array? */
