@@ -138,10 +138,13 @@ static bool try_absolute(const char *cmd, char **path)
 	return false;
 }
 
-static int parse_handle_stdout_redirection(char *str, char **stdout_path)
+static int parse_handle_stdout_redirection(char *str,
+					   char **stdout_path,
+					   bool *append)
 {
-	bool append = false;
 	char next;
+
+	*append = false;
 
 	/* terminate the string just in case */
 	*str = '\0';
@@ -153,7 +156,7 @@ static int parse_handle_stdout_redirection(char *str, char **stdout_path)
 
 	if (next == '>') {
 		verbose("redirection is appending\n");
-		append = true;
+		*append = true;
 		str++;
 	}
 
@@ -172,7 +175,7 @@ static int parse_handle_stdout_redirection(char *str, char **stdout_path)
 
 static int toktoktok(char *str, size_t len,
 		     char** tokens, unsigned max_tokens, unsigned *num_tokens,
-		     char** stdout)
+		     char** stdout, bool *append)
 {
 	char *redirection_stdout = NULL;
 	unsigned int token_count = 0;
@@ -196,7 +199,7 @@ static int toktoktok(char *str, size_t len,
 			*str = '\0';
 
 			verbose("Redirection started at %d\n", i);
-			ret = parse_handle_stdout_redirection(str, &redirection_stdout);
+			ret = parse_handle_stdout_redirection(str, &redirection_stdout, append);
 			if (ret)
 				return ret;
 
@@ -264,6 +267,7 @@ int main (int argc, char **argv, char **envp)
 		/* For redirection */
 		int _stdout = STDOUT_FILENO;
 		int redirected_stdout __cleanup_fd = -1;
+		bool append;
 
 		do_prompt();
 
@@ -276,18 +280,29 @@ int main (int argc, char **argv, char **envp)
 
 		ret = toktoktok(line, len,
 				tokens, ARRAY_SIZE(tokens), &num_tokens,
-				&stdout);
+				&stdout, &append);
 		if (ret) {
 			printf("Syntax error\n");
 			continue;
 		}
 
 		if (stdout) {
-			redirected_stdout = open(stdout, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+			int flags = O_WRONLY | O_CREAT;
+
+			/* If not appending, truncate any existing file */
+			if (!append)
+				flags |= O_TRUNC;
+
+			redirected_stdout = open(stdout, flags, 0644);
 			if (redirected_stdout < 0) {
 				printf("failed to open file for redirection: %d\n", _stdout);
 				continue;
 			}
+
+			/* If appending, wind the file to end so we append */
+			if (append)
+				lseek(redirected_stdout, 0, SEEK_END);
+
 			_stdout = redirected_stdout;
 		}
 
