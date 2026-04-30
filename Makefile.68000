@@ -49,20 +49,14 @@ clean:
 	rm -f *.o *.gdb *.68000.elf *.68000.elf.dbg
 
 .PHONY: m68k.erofs
-m68k.erofs: init.68000.elf \
-	    getty.68000.elf \
-	    smolsh.68000.elf \
-	    ls.68000.elf \
-	    ps.68000.elf \
-	    dmesg.68000.elf \
-	    cat.68000.elf \
-	    mkdir.68000.elf
+m68k.erofs: elfs
 	mkdir -p m68kroot/sys
 	mkdir -p m68kroot/dev
 	mkdir -p m68kroot/proc
 	mkdir -p m68kroot/tmp
 	mkdir -p m68kroot/bin
 	mkdir -p m68kroot/sbin
+
 	cp init.68000.elf m68kroot/sbin/init
 	cp getty.68000.elf m68kroot/sbin/getty
 
@@ -72,5 +66,8 @@ m68k.erofs: init.68000.elf \
 	cp dmesg.68000.elf m68kroot/bin/dmesg
 	cp cat.68000.elf m68kroot/bin/cat
 	cp mkdir.68000.elf m68kroot/bin/mkdir
+	cp xxd.68000.elf m68kroot/bin/xxd
+	cp man.68000.elf m68kroot/bin/man
+	cp sha256sum.68000.elf m68kroot/bin/sha256sum
 
 	mkfs.erofs -zlz4 $@ m68kroot/

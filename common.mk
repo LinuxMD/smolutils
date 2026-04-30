@@ -14,7 +14,18 @@ CC=$(CROSS_COMPILE)gcc
 BFDLD=$(CROSS_COMPILE)ld.bfd
 STRIP=$(CROSS_COMPILE)strip
 
-PROGS=init getty smolsh dmesg ls ps cat mkdir sha256sum
+PROGS = init		\
+	getty		\
+	smolsh		\
+	dmesg		\
+	ls		\
+	ps		\
+	cat		\
+	mkdir		\
+	sha256sum	\
+	xxd		\
+	man		\
+	less
 
 COPTS= -ggdb \
 	-nostdlib \
