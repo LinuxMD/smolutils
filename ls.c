@@ -77,5 +77,8 @@ int main(int argc, char **argv, char **envp)
 
 	iterate_dir(path, long_format ? cb_long : cb_short, NULL);
 
+	if (!long_format)
+		printf("\n");
+
 	return 0;
 }
