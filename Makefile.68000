@@ -78,4 +78,4 @@ m68k.erofs: elfs
 	cp chmod.68000.elf m68kroot/bin/chmod
 	cp kill.68000.elf m68kroot/bin/kill
 
-	mkfs.erofs -zlz4 $@ m68kroot/
+	mkfs.erofs -Eztailpacking -zlz4hc $@ m68kroot/
