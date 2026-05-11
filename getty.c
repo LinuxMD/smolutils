@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "common.h"
+#include "users.h"
 
 int main(int argc, char **argv, char **envp)
 {
@@ -27,6 +28,9 @@ int main(int argc, char **argv, char **envp)
 			NULL
 		};
 		char *newenviron[] = { NULL };
+
+		users_changeuser(SMOLUTILS_USERS_NORMAL_MIN,
+				 SMOLUTILS_USERS_NORMAL_MIN);
 
 		execve(shell_path, newargv, newenviron);
 		printf("execve failed\n");
