@@ -10,13 +10,40 @@ static int cb_short(const char *name, int dir, void *priv)
 	return 0;
 }
 
+static void print_perms(bool r, bool w, bool x)
+{
+	char _r = '-', _w = '-', _x = '-';
+
+	if (r)
+		_r = 'r';
+	if (w)
+		_w = 'w';
+	if (x)
+		_x = 'x';
+
+	printf("%c%c%c", _r, _w, _x);
+}
+
+static void print_user(uid_t uid)
+{
+	if (uid == 0)
+		printf("%10s", "root");
+	else
+		printf("%10u", uid);
+}
+
+static void print_group(uid_t gid)
+{
+	if (gid == 0)
+		printf("%10s", "root");
+	else
+		printf("%10u", gid);
+}
+
 static int cb_long(const char *name, int dir, void *priv)
 {
-        struct stat st;
 	char type = '-';
-	char u_r = '-', u_w = '-', u_x = '-';
-	char g_r = '-', g_w = '-', g_x = '-';
-	char o_r = '-', o_w = '-', o_x = '-';
+        struct stat st;
 
         if (fstatat(dir, name, &st, AT_SYMLINK_NOFOLLOW) == -1)
                 return -1;
@@ -25,36 +52,30 @@ static int cb_long(const char *name, int dir, void *priv)
 	if (st.st_mode & S_IFDIR)
 		type = 'd';
 
+	printf("%c", type);
+
 	/* User permissions */
-	if (st.st_mode & S_IRUSR)
-		u_r = 'r';
-	if (st.st_mode & S_IWUSR)
-		u_w = 'w';
-	if (st.st_mode & S_IXUSR)
-		u_x = 'x';
+	print_perms(!!(st.st_mode & S_IRUSR),
+		    !!(st.st_mode & S_IWUSR),
+		    !!(st.st_mode & S_IXUSR));
 
 	/* Group permissions */
-	if (st.st_mode & S_IRGRP)
-		g_r = 'r';
-	if (st.st_mode & S_IWGRP)
-		g_w = 'w';
-	if (st.st_mode & S_IXGRP)
-		g_x = 'x';
+	print_perms(!!(st.st_mode & S_IRGRP),
+		    !!(st.st_mode & S_IWGRP),
+		    !!(st.st_mode & S_IXGRP));
 
 	/* Others permissions */
-	if (st.st_mode & S_IROTH)
-		o_r = 'r';
-	if (st.st_mode & S_IWOTH)
-		o_w = 'w';
-	if (st.st_mode & S_IXOTH)
-		o_x = 'x';
+	print_perms(!!(st.st_mode & S_IROTH),
+		    !!(st.st_mode & S_IWOTH),
+		    !!(st.st_mode & S_IXOTH));
 
-	printf("%c%c%c%c%c%c%c%c%c%c %s\n",
-		type,
-		u_r, u_w, u_x,
-		g_r, g_w, g_x,
-		o_r, o_w, o_x,
-		name);
+	/* user */
+	print_user(st.st_uid);
+
+	/* gid */
+	print_group(st.st_gid);
+
+	printf(" %s\n", name);
 
 	return 0;
 }
