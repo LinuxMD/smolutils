@@ -59,6 +59,11 @@ static void cleanup_dir(DIR **_dir)
 
 #define __cleanup_dir __attribute__((cleanup(cleanup_dir)))
 
+/*
+ * Iterate over a directory calling cb() for each element,
+ * if cb() returns <0 thats an error and the loop will abort,
+ * 0 means to continue looping, and >0 means to exit the loop.
+ */
 static int iterate_dir(const char *path,
 		       int (*cb)(const char *name, int dir, void *priv), void *priv)
 {
