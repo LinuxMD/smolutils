@@ -27,6 +27,7 @@
 #endif
 
 #define error(...) printf(__VA_ARGS__)
+#define info(...) printf(__VA_ARGS__)
 
 /* File stuff */
 
@@ -150,6 +151,10 @@ static int spawn_and_wait_full(const char *path,
 		return -1;
 
 	waitpid(pid, &waitpid_stat, 0);
+
+	if (WIFEXITED(waitpid_stat)) {
+		return WEXITSTATUS(waitpid_stat);
+	}
 
 	return 0;
 }

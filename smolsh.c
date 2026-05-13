@@ -11,8 +11,11 @@ static bool keeprocking = true;
 static void run_cmd(const char *bin, char * const *argv)
 {
 	char *newenviron[] = { NULL };
+	int ret;
 
-	spawn_and_wait_full(bin, argv, newenviron);
+	ret = spawn_and_wait_full(bin, argv, newenviron);
+	if (ret)
+		info("Exited with non-zero return code: %d\n", ret);
 }
 
 /* Real builtins */
@@ -157,7 +160,7 @@ static bool try_search(const char *cmd, char **path)
 	static char _path[1024];
 	int ret;
 
-	ret = iterate_dir("/bin", try_search_cb, cmd);
+	ret = iterate_dir("/bin", try_search_cb, (void *) cmd);
 
 	if (ret > 0) {
 		sprintf(_path, "/bin/%s", cmd);
@@ -217,7 +220,10 @@ static int toktoktok(char *str, size_t len,
 		char ch = *str;
 
 		/* Don't support this crazy stuff */
-		if (ch == ';' || ch == '<' | ch == '\\') {
+		if (ch == ';' ||
+		    ch == '<' ||
+		    ch == '\\' ||
+		    ch == '$' ) {
 			return -1;
 		}
 
