@@ -10,19 +10,9 @@ static bool keeprocking = true;
 
 static void run_cmd(const char *bin, char * const *argv)
 {
-	pid_t pid = vfork();
+	char *newenviron[] = { NULL };
 
-	/* We are smolsh */
-	if (pid) {
-		wait(NULL);
-	}
-	/* We are the new process */
-	else {
-		char *newenviron[] = { NULL };
-
-		execve(bin, argv, newenviron);
-		printf("execve failed\n");
-	}
+	spawn_and_wait_full(bin, bin, argv, newenviron);
 }
 
 /* Real builtins */
