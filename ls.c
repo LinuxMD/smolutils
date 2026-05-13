@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "common.h"
+#include "users.h"
 
 static int cb_short(const char *name, int dir, void *priv)
 {
@@ -26,10 +27,12 @@ static void print_perms(bool r, bool w, bool x)
 
 static void print_user(uid_t uid)
 {
-	if (uid == 0)
-		printf("%10s", "root");
+	const char *user = users_map_user(uid);
+
+	if (user)
+		printf("%10s", users_map_user(uid));
 	else
-		printf("%10u", uid);
+		printf("%10u", (unsigned int) uid);
 }
 
 static void print_group(uid_t gid)
