@@ -302,6 +302,8 @@ int main (int argc, char **argv, char **envp)
 		do_prompt();
 
 		len = read(STDIN_FILENO, &line, ARRAY_SIZE(line) - 1);
+		if (len <= 0)
+			break;
 
 		/* Terminate the end of the string, this should be \n */
 		line[len - 1] = '\0';
