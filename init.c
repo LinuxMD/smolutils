@@ -5,6 +5,7 @@
 
 #include "nolibc_extensions/signal.h"
 
+#define STARTUP_PATH "/sbin/startup"
 #define GETTY_PATH "/sbin/getty"
 #define GETTY_NAME "getty"
 #define SHELL_PATH "/bin/smolsh"
@@ -183,6 +184,10 @@ int main (int argc, char **argv, char **envp)
 	parse_environment(envp);
 
 	mount_filesystems();
+
+	ret = spawn_and_wait("startup", STARTUP_PATH);
+	if (ret)
+		error("startup failed\n");
 
 	setup_signals();
 
