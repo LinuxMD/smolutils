@@ -20,7 +20,7 @@ static void print_process(const char *pid, const char *comm_path)
 
 	tmp[len - 1] = '\0';
 
-	printf("%s\t%s\t%s\n", users_map_user(0 /* fixme */), pid, tmp);
+	printf("%s\t\t%s\t\t%s\n", users_map_user(0 /* fixme */), pid, tmp);
 }
 
 static int cb(const char *name, int dir, void *priv)
