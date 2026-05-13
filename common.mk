@@ -50,6 +50,8 @@ COPTS= -ggdb \
 
 COPTS += -flto
 
+C_FILES = $(addsuffix .c,$(PROGS_SYSTEM)) $(addsuffix .c,$(PROGS_USER))
+
 ifdef UAPIDIR
 	COPTS += -I$(UAPIDIR)
 endif
