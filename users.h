@@ -23,7 +23,7 @@ static const char *users_map_user(uid_t uid)
 	if (uid == 0)
 		return "root";
 
-	return "dunno";
+	return NULL;
 }
 
 #endif  /* _SMOLUTILS_USERS_H */
