@@ -15,7 +15,7 @@ static void run_cmd(const char *bin, char * const *argv)
 
 	ret = spawn_and_wait_full(bin, argv, newenviron);
 	if (ret)
-		info("Exited with non-zero return code: %d\n", ret);
+		error("Exited with non-zero return code: %d\n", ret);
 }
 
 /* Real builtins */
@@ -27,8 +27,20 @@ struct builtin {
 static int cd_handler(int argc, char **argv, int stdout)
 {
 	char *newdir = argv[1];
+	int ret;
 
-	chdir(newdir);
+	ret = chdir(newdir);
+	if (ret) {
+		switch(errno) {
+		case ENOENT:
+			error("Directory does not exist\n");
+			break;
+		default:
+			error("chdir() failed: %m\n", errno);
+			break;
+		}
+		return 1;
+	}
 
 	return 0;
 }
