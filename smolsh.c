@@ -36,7 +36,7 @@ static int cd_handler(int argc, char **argv, int stdout)
 			error("Directory does not exist\n");
 			break;
 		default:
-			error("chdir() failed: %m\n", errno);
+			error("chdir() failed: %d\n", errno);
 			break;
 		}
 		return 1;
