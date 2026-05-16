@@ -41,6 +41,13 @@ PROGS_USER =		\
 	mount		\
 	umount
 
+PROGS_NET_SYSTEM =	\
+	sntp		\
+	dhcpc
+
+PROGS_NET_USER =	\
+	ping
+
 # Make some warnings into errors because I am bad at the programming
 _COPTS = -Werror=return-type
 _COPTS += -flto
