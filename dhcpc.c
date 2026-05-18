@@ -54,12 +54,9 @@ struct dhcp_packet {
 	uint8_t  options[308];
 } __attribute__((packed));
 
-static int build_discover(struct dhcp_packet *p,
-			  uint32_t xid,
-			  const uint8_t *mac)
+static void clear_packet_create_header(struct dhcp_packet *p,
+				       uint32_t xid, const uint8_t *mac)
 {
-	int opt_count = 0;
-
 	memset(p, 0, sizeof(*p));
 
 	p->op = 1,
@@ -69,6 +66,15 @@ static int build_discover(struct dhcp_packet *p,
 	p->flags = htons(0x8000);
 	memcpy(p->chaddr, mac, 6);
 	p->magic = htonl(MAGIC_COOKIE);
+}
+
+static int build_discover(struct dhcp_packet *p,
+			  uint32_t xid,
+			  const uint8_t *mac)
+{
+	int opt_count = 0;
+
+	clear_packet_create_header(p, xid, mac);
 
 	p->options[opt_count++] = OPT_MSG_TYPE;
 	p->options[opt_count++] = 1;
@@ -95,6 +101,57 @@ static int send_discover(struct context *cntx, struct dhcp_packet *p)
 	int ret;
 
 	len = build_discover(p, cntx->xid, cntx->mac);
+
+	ret = sendto(cntx->sock, p, len, 0, (struct sockaddr *)&dst, sizeof(dst));
+
+	if (ret != len) {
+		error("Failed to send discover: %d\n", errno);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int build_request(struct dhcp_packet *p,
+			 uint32_t xid,
+			 const uint8_t *mac,
+			 uint32_t req_ip,
+			 uint32_t server_id)
+{
+	int opt_count = 0;
+
+	clear_packet_create_header(p, xid, mac);
+
+	p->options[opt_count++] = OPT_MSG_TYPE;
+	p->options[opt_count++] = 1;
+	p->options[opt_count++] = DHCPREQUEST;
+
+	p->options[opt_count++] = OPT_REQ_IP;
+	p->options[opt_count++] = 4;
+	memcpy(&p->options[opt_count], &req_ip, 4);
+	opt_count += 4;
+
+	p->options[opt_count++] = OPT_SERVER_ID;
+	p->options[opt_count++] = 4;
+	memcpy(&p->options[opt_count], &server_id, 4);
+	opt_count += 4;
+
+	p->options[opt_count++] = OPT_END;
+
+	return offsetof(struct dhcp_packet, options) + opt_count;
+}
+
+static int send_request(struct context *cntx, struct dhcp_packet *p)
+{
+	struct sockaddr_in dst = {
+		.sin_family = AF_INET,
+		.sin_port = htons(SERVER_PORT),
+		.sin_addr.s_addr = INADDR_BROADCAST,
+	};
+	int len;
+	int ret;
+
+	len = build_request(p, cntx->xid, cntx->mac, 0, 0);
 
 	ret = sendto(cntx->sock, p, len, 0, (struct sockaddr *)&dst, sizeof(dst));
 
@@ -306,6 +363,26 @@ out:
     return -ENOENT;
 }
 
+static int find_opt_u32(struct dhcp_packet *p, uint8_t code, uint32_t *opt)
+{
+	unsigned int len;
+	uint8_t *_opt;
+	uint32_t tmp;
+	int ret;
+
+	ret = find_opt(p, code, &_opt, &len);
+	if (ret)
+		return ret;
+
+	if (len != 1)
+		return -EINVAL;
+
+	memcpy(&tmp, _opt, sizeof(tmp));
+	*opt = tmp;
+
+	return 0;
+}
+
 static int find_opt_u8(struct dhcp_packet *p, uint8_t code, uint8_t *opt)
 {
 	unsigned int len;
@@ -320,6 +397,87 @@ static int find_opt_u8(struct dhcp_packet *p, uint8_t code, uint8_t *opt)
 		return -EINVAL;
 
 	*opt = _opt[0];
+
+	return 0;
+}
+
+int do_discover(struct context *cntx, struct dhcp_packet *p)
+{
+	uint8_t msgtype;
+	int ret;
+
+	verbose("Sending discover\n");
+	ret = send_discover(cntx, p);
+	if (ret) {
+		verbose("Failed to send discover\n");
+		return ret;
+	}
+
+	verbose("Waiting for offer\n");
+	ret = wait_for_packet(cntx, p);
+	if (ret) {
+		verbose("Didn't get response\n");
+		return ret;
+	}
+
+	if (!check_packet(cntx, p, 2)) {
+		verbose("incorrect packet?\n");
+		return -EINVAL;
+	}
+
+	ret = find_opt_u8(p, OPT_MSG_TYPE, &msgtype);
+	if (ret) {
+		verbose("Failed to get msgtype\n");
+		return ret;
+	}
+
+	if (msgtype != DHCPOFFER)
+		return -EINVAL;
+
+	uint32_t addr = ntohl(p->yiaddr);
+	verbose("Got offer for %d.%d.%d.%d\n",
+		(addr >> 24) & 0xff,
+		(addr >> 16) & 0xff,
+		(addr >> 8) & 0xff,
+		 addr & 0xff
+	);
+
+	return 0;
+}
+
+int do_request(struct context *cntx, struct dhcp_packet *p)
+{
+	uint8_t msgtype;
+	int ret;
+
+	verbose("Sending request\n");
+	ret = send_request(cntx, p);
+	if (ret) {
+		verbose("Failed to send request\n");
+		return ret;
+	}
+
+	verbose("Waiting for ack\n");
+	ret = wait_for_packet(cntx, p);
+	if (ret) {
+		verbose("Didn't get a response to our ack\n");
+		return ret;
+	}
+
+	if (!check_packet(cntx, p, 2)) {
+		verbose("incorrect packet?\n");
+		return -EINVAL;
+	}
+
+	ret = find_opt_u8(p, OPT_MSG_TYPE, &msgtype);
+	if (ret) {
+		verbose("Failed to get msgtype\n");
+		return ret;
+	}
+
+	if (msgtype != DHCPACK) {
+		return -EINVAL;
+	}
 
 	return 0;
 }
@@ -348,36 +506,15 @@ int main(int argc, char **argv, char **envp)
 		return 1;
 
 	while (true) {
-		verbose("Sending broadcast\n");
-		ret = send_discover(&cntx, &p);
+			ret = do_discover(&cntx, &p);
+			if (ret) {
+				sleep(10);
+				continue;
+			}
 
-		verbose("Waiting for response\n");
-		ret = wait_for_packet(&cntx, &p);
 
-		if (ret) {
-			verbose("Didn't get response\n");
-			sleep(10);
-			continue;
-		}
-
-		if (!check_packet(&cntx, &p, 2)) {
-			verbose("incorrect packet?\n");
-			sleep(10);
-			continue;
-		}
-
-		uint8_t msgtype;
-		ret = find_opt_u8(&p, OPT_MSG_TYPE, &msgtype);
-		if (ret) {
-			verbose("Failed to get msgtype\n");
-			sleep(10);
-			continue;
-		}
-
-		if (msgtype == DHCPOFFER) {
-			verbose("got offer\n");
+			ret = do_request(&cntx, &p);
 			break;
-		}
 	}
 
 	return 0;
