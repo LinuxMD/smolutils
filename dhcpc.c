@@ -207,7 +207,6 @@ static int setup_socket(struct context *cntx)
 		.sin_port = htons(SERVER_PORT),
 		.sin_addr.s_addr = INADDR_BROADCAST,
 	};
-	int sock_opt = 1;
 	int sock;
 	int ret;
 
@@ -217,12 +216,9 @@ static int setup_socket(struct context *cntx)
 		return -1;
 	}
 
-	ret = setsockopt(sock, SOL_SOCKET, SO_BROADCAST,
-			 &sock_opt, sizeof(sock_opt));
-	if (ret < 0) {
-		error("Failed to set broadcast\n");
+	ret = smolutils_net_setsockbroadcast(sock);
+	if (ret)
 		return -1;
-	}
 
 	ret = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE,
 			 (void *) cntx->interface, strlen(cntx->interface) + 1);
