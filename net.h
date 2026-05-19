@@ -3,6 +3,11 @@
 #ifndef _SMOLUTILS_NET_H
 #define _SMOLUTILS_NET_H
 
+/* This is some libc stuff that might get moved.. */
+
+#define INET_ADDRSTRLEN		16
+#define INET6_ADDRSTRLEN	48
+
 int inet_aton(const char *cp, struct in_addr *inp) {
 	const char *start = cp;
 	uint32_t tmp;
@@ -33,6 +38,39 @@ int inet_aton(const char *cp, struct in_addr *inp) {
 		inp->s_addr = htonl(tmp);
 
 	return 1;
+}
+
+int inet_pton(int af, const char *src, void *dst)
+{
+	switch (af) {
+	case AF_INET:
+		return inet_aton(src, dst);
+	default:
+		break;
+	}
+	return 0;
+}
+
+#define IPPRINT "%d.%d.%d.%d"
+
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t size)
+{
+	uint32_t v4_addr;
+
+	switch(af) {
+	case AF_INET:
+		memcpy(&v4_addr, src, sizeof(v4_addr));
+		v4_addr = ntohl(v4_addr);
+		sprintf(dst, IPPRINT, (v4_addr >> 24) & 0xff,
+		(v4_addr >> 16) & 0xff,
+		(v4_addr >> 8) & 0xff,
+		 v4_addr & 0xff);
+		return dst;
+	default:
+		break;
+	}
+
+	return NULL;
 }
 
 static int smolutils_net_setsockbroadcast(int sock)

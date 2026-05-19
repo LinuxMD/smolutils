@@ -29,8 +29,6 @@
 #define OPT_PARAM_REQ   55
 #define OPT_END         255
 
-#define IPPRINT "%d.%d.%d.%d"
-
 struct config {
 	uint32_t address;
 	uint32_t subnet_mask;

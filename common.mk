@@ -63,7 +63,7 @@ ifdef UAPIDIR
 	COPTS += -I$(UAPIDIR)
 endif
 
-HEADERS = common.h users.h
+HEADERS = common.h users.h net.h
 
 rootskel:
 	mkdir -p rootskel/sys
