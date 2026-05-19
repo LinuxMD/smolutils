@@ -33,6 +33,10 @@ static int copy_a_file(const char *src, const char *dst)
 	debug("Calling sendfile() to copy %lld bytes\n", sz);
 
 	ret = sendfile(dst_fd, src_fd, NULL, sz);
+	if (ret != sz) {
+		error("sendfile() failed\n");
+		return -1;
+	}
 
 	return 0;
 }
