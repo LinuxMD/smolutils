@@ -3,6 +3,7 @@
 #include "config.h"
 #define VERBOSE
 #include "common.h"
+#include "net.h"
 
 #include <linux/sockios.h>
 
@@ -206,7 +207,6 @@ static int setup_socket(struct context *cntx)
 		.sin_port = htons(SERVER_PORT),
 		.sin_addr.s_addr = INADDR_BROADCAST,
 	};
-	struct timeval timeout = { .tv_sec = 10 };
 	int sock_opt = 1;
 	int sock;
 	int ret;
@@ -214,34 +214,31 @@ static int setup_socket(struct context *cntx)
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sock < 0) {
 		error("Failed to create socket\n");
-		return 1;
+		return -1;
 	}
 
 	ret = setsockopt(sock, SOL_SOCKET, SO_BROADCAST,
 			 &sock_opt, sizeof(sock_opt));
 	if (ret < 0) {
 		error("Failed to set broadcast\n");
-		return 1;
+		return -1;
 	}
 
 	ret = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE,
 			 (void *) cntx->interface, strlen(cntx->interface) + 1);
 	if (ret < 0) {
 		error("Failed to bind\n");
-		return 1;
+		return -1;
 	}
 
-	ret = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
-		   &timeout, sizeof(timeout));
-	if (ret < 0) {
-		error("Failed to set timeout\n");
-		return 1;
-	}
+	ret = smolutils_net_setsockrxtimeout(sock, 10);
+	if (ret)
+		return -1;
 
 	ret = bind(sock, (struct sockaddr *)&client_addr, sizeof client_addr);
 	if (ret < 0) {
 		error("Failed to bind socket\n");
-		return 1;
+		return -1;
 	}
 
 	cntx->sock = sock;
