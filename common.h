@@ -123,7 +123,7 @@ static __attribute__((noinline)) int spawn(const char *path,
 					   char * const argv[],
 					   char * const envp[])
 {
-	pid_t pid;
+	volatile pid_t pid;
 
 	pid = vfork();
 
@@ -140,7 +140,8 @@ static __attribute__((noinline)) int spawn(const char *path,
 
 static int spawn_and_wait_full(const char *path,
 			       char * const argv[],
-			       char * const envp[])
+			       char * const envp[],
+			       bool *killed)
 {
 	int waitpid_stat;
 	pid_t pid;
@@ -151,6 +152,12 @@ static int spawn_and_wait_full(const char *path,
 		return -1;
 
 	waitpid(pid, &waitpid_stat, 0);
+
+	if (WIFSIGNALED(waitpid_stat)) {
+		if (killed)
+			*killed = true;
+		return WTERMSIG(waitpid_stat);
+	}
 
 	if (WIFEXITED(waitpid_stat)) {
 		return WEXITSTATUS(waitpid_stat);
@@ -167,7 +174,7 @@ static int spawn_and_wait(char *name, const char *path)
 	};
 	char *newenviron[] = { NULL };
 
-	return spawn_and_wait_full(path, newargv, newenviron);
+	return spawn_and_wait_full(path, newargv, newenviron, NULL);
 }
 
 #endif /* _SMOLUTILS_COMMON_H */

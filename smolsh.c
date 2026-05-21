@@ -11,11 +11,16 @@ static bool keeprocking = true;
 static void run_cmd(const char *bin, char * const *argv)
 {
 	char *newenviron[] = { NULL };
+	bool killed = false;
 	int ret;
 
-	ret = spawn_and_wait_full(bin, argv, newenviron);
-	if (ret)
-		error("Exited with non-zero return code: %d\n", ret);
+	ret = spawn_and_wait_full(bin, argv, newenviron, &killed);
+	if (ret) {
+		if (killed)
+			error("Killed by signal: %d\n", ret);
+		else
+			error("Exited with non-zero return code: %d\n", ret);
+	}
 }
 
 /* Real builtins */
