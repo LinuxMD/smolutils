@@ -6,7 +6,10 @@ all: elfs
 #	-fdata-sections \
 
 
+#	-fno-stack-protector \
+
 COPTS += -m68000 \
+	 -mstrict-align \
 	 -D R_68K_RELATIVE=22
 
 #	-I_build/headers/include
