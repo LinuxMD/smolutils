@@ -75,6 +75,7 @@ rootskel:
 	mkdir -p rootskel/dev
 	mkdir -p rootskel/proc
 	mkdir -p rootskel/tmp
+	mkdir -p rootskel/run
 	mkdir -p rootskel/bin
 	mkdir -p m68kroot/sbin
 

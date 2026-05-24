@@ -28,6 +28,7 @@ static const struct mountpoint fstab[] = {
 	{"sysfs", "/sys", "sysfs"},
 	{"proc", "/proc", "proc"},
 	{"tmp", "/tmp", "tmpfs"},
+	{"run", "/run", "tmpfs"},
 };
 
 /* This avoids having to use a mount command, fstab etc */
