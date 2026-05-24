@@ -45,3 +45,14 @@ For nommu targets even uclibc + busybox isn't very usable:
 | umount    |            |                            |       |
 | uname     |            |                            |       |
 | xxd       |            |                            |       |
+
+
+## Design
+
+### DNS resolver
+
+Since nolibc has no DNS resolver and I don't want something massive like
+that in every binary that just so happens to need to do DNS lookups
+that stuff is deligated to another program called resolv. To avoid awful
+string parsing stuff the process that needs DNS resolution creates a
+memfd and resolv puts the struct with the results in there.
