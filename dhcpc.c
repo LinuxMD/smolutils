@@ -34,6 +34,7 @@ struct config {
 	uint32_t subnet_mask;
 	uint32_t router;
 	uint32_t serverid;
+	uint32_t dns[4];
 };
 
 struct context {
@@ -521,7 +522,11 @@ static int find_opt_u8(struct dhcp_packet *p, uint8_t code, uint8_t *opt)
 
 int do_discover(struct context *cntx, struct dhcp_packet *p)
 {
-	uint32_t addr, subnet, router, serverid;
+	uint32_t addr, subnet, router, serverid, dns[4];
+	char subnet_str[INET_ADDRSTRLEN];
+	char router_str[INET_ADDRSTRLEN];
+	char addr_str[INET_ADDRSTRLEN];
+	char dns_str[INET_ADDRSTRLEN];
 	uint8_t msgtype;
 	int ret;
 
@@ -564,25 +569,21 @@ int do_discover(struct context *cntx, struct dhcp_packet *p)
 
 	addr = ntohl(p->yiaddr);
 
-	verbose("Got offer for " IPPRINT "(" IPPRINT "), router " IPPRINT "\n",
-		(addr >> 24) & 0xff,
-		(addr >> 16) & 0xff,
-		(addr >> 8) & 0xff,
-		 addr & 0xff,
-		(subnet >> 24) & 0xff,
-		(subnet >> 16) & 0xff,
-		(subnet >> 8) & 0xff,
-		 subnet & 0xff,
-		(router >> 24) & 0xff,
-		(router >> 16) & 0xff,
-		(router >> 8) & 0xff,
-		 router & 0xff
-	);
+	inet_ntop(AF_INET, &addr, addr_str, sizeof(addr_str));
+	inet_ntop(AF_INET, &subnet, subnet_str, sizeof(subnet_str));
+	inet_ntop(AF_INET, &router, router_str, sizeof(router_str));
+
+	verbose("Got offer for %s (%s), router %s\n",
+		addr_str, subnet_str, router_str);
 
 	cntx->config.serverid = serverid;
 	cntx->config.address = addr;
 	cntx->config.subnet_mask = subnet;
 	cntx->config.router = router;
+
+	ret = find_opt_u32(p, OPT_DNS, &dns[0]);
+	inet_ntop(AF_INET, &dns[0], dns_str, sizeof(dns_str));
+	verbose("DNS server: %s\n", dns_str);
 
 	return 0;
 }
