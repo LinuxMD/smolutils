@@ -3,6 +3,8 @@
 #include "config.h"
 #include "common.h"
 
+#include "nolibc_extensions/unistd.h"
+
 static int do_mount(const char *source, const char *target, const char *type)
 {
 	int ret;
@@ -64,15 +66,22 @@ static int setup_network(const char *netif)
 int main (int argc, char **argv, char **envp)
 {
 	char c;
+	char *hostname = NULL;
 	char *netif = NULL;
 
-        while ((c = getopt(argc, argv, "n:")) != -1) {
+        while ((c = getopt(argc, argv, "h:n:")) != -1) {
                 switch (c) {
+		case 'h':
+			hostname = optarg;
+			break;
                 case 'n':
                         netif = optarg;
                         break;
                 }
         }
+
+	if (hostname)
+		sethostname(hostname, strlen(hostname));
 
 	mount_filesystems();
 
