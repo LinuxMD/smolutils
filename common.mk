@@ -47,7 +47,8 @@ PROGS_NET_SYSTEM =	\
 
 PROGS_NET_USER =	\
 	ping		\
-	resolv
+	resolv		\
+	tftp
 
 # Make some warnings into errors because I am bad at the programming
 _COPTS =  -Werror=return-type
