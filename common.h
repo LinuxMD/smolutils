@@ -31,7 +31,7 @@
 
 /* File stuff */
 
-off_t file_size(int fd) {
+static off_t file_size(int fd) {
 	struct stat st;
 
 	if (fstat(fd, &st) == -1)
