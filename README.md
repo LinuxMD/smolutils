@@ -72,3 +72,16 @@ that in every binary that just so happens to need to do DNS lookups
 that stuff is deligated to another program called resolv. To avoid awful
 string parsing stuff the process that needs DNS resolution creates a
 memfd and resolv puts the struct with the results in there.
+
+
+## Running in QEMU
+
+
+```
+qemu-system-x86_64 -kernel bzImage -drive file=x86_64.erofs,format=raw,if=virtio -nic user,model=virtio-net-pci -serial mon:stdio -append "console=ttyS0 root=/dev/vda ro -- smolinit.getty=/dev/ttyS0 smolinit.hostname=eighty6 smolinit.dhcpif=eth0"
+```
+
+
+## TODO
+
+Fix terminal control handling stuff so ctrl-c works..
