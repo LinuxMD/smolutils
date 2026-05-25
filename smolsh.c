@@ -31,8 +31,13 @@ struct builtin {
 
 static int cd_handler(int argc, char **argv, int stdout)
 {
-	char *newdir = argv[1];
+	char *newdir;
 	int ret;
+
+	if (argc != 2)
+		return 1;
+
+	newdir = argv[1];
 
 	ret = chdir(newdir);
 	if (ret) {
@@ -60,8 +65,13 @@ static int clear_handler(int argc, char **argv, int stdout)
 static int echo_handler(int argc, char **argv, int stdout)
 {
 	char tmp[1024];
-	char *str = argv[1];
+	char *str;
 	int len;
+
+	if (argc != 2)
+		return 1;
+
+	str = argv[1];
 
 	len = sprintf(tmp, "%s\n", str);
 
