@@ -73,8 +73,23 @@ static int prog_mv(int argc, char **argv, char **envp)
 	return 0;
 }
 
+/* no recursive support for now */
 static int prog_rm(int argc, char **argv, char **envp)
 {
+	const char *path;
+	int ret;
+
+	if (argc != 2)
+		return 1;
+
+	path = argv[1];
+
+	ret = unlink(path);
+	if (ret) {
+		error("unlink() failed: %d\n", errno);
+		return 1;
+	}
+
 	return 0;
 }
 
