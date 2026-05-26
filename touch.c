@@ -41,6 +41,16 @@ static int prog_mv(int argc, char **argv, char **envp)
 	return 0;
 }
 
+static int prog_rm(int argc, char **argv, char **envp)
+{
+	return 0;
+}
+
+static int prog_rmdir(int argc, char **argv, char **envp)
+{
+	return 0;
+}
+
 static int prog_mkdir(int argc, char **argv, char **envp)
 {
 	const char *path;
@@ -65,6 +75,8 @@ static const struct mutlicall_prog progs[] = {
 	{ "ln", prog_ln },
 	{ "mv", prog_mv },
 	{ "mkdir", prog_mkdir },
+	{ "rm", prog_rm },
+	{ "rmdir", prog_rmdir },
 };
 
 int main (int argc, char **argv, char **envp)

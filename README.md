@@ -45,7 +45,8 @@ For nommu targets even uclibc + busybox isn't very usable:
 | umount    |            | mount                      |       |
 | uname     |            |                            |       |
 | xxd       |            |                            |       |
-
+| rm        |            | touch                      |       |
+| rmdir     |            | touch                      |       |
 
 ## Design
 

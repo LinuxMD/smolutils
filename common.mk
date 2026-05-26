@@ -78,8 +78,11 @@ rootskel:
 
 	mkdir -p rootskel/bin
 	ln -s touch rootskel/bin/mkdir
-	ln -s mount rootskel/bin/umount
 	ln -s touch rootskel/bin/ln
+	ln -s touch rootskel/bin/rm
+	ln -s touch rootskel/bin/rmdir
+
+	ln -s mount rootskel/bin/umount
 	mkdir -p rootskel/sbin
 
 EROFS_CMD = mkfs.erofs -E force-inode-compact,all-fragments,dedupe -zlz4hc --tar
