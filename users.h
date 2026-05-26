@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #ifndef _SMOLUTILS_USERS_H
 #define _SMOLUTILS_USERS_H
 
