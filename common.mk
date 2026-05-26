@@ -69,7 +69,8 @@ HEADERS = common.h \
 	  users.h \
 	  net.h \
 	  resolv.h \
-	  memfd.h
+	  memfd.h \
+	  multicall.h
 
 rootskel:
 	mkdir -p rootskel/sys

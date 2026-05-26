@@ -3,7 +3,9 @@
 #include "config.h"
 #include "common.h"
 
-static int multicall_mount(int argc, char **argv, char **envp)
+#include "multicall.h"
+
+static int prog_mount(int argc, char **argv, char **envp)
 {
 	int ret;
 	char *source = NULL;
@@ -39,7 +41,7 @@ static int multicall_mount(int argc, char **argv, char **envp)
 	return 0;
 }
 
-static int multicall_umount(int argc, char **argv, char **envp)
+static int prog_umount(int argc, char **argv, char **envp)
 {
 	char *target;
 
@@ -53,12 +55,14 @@ static int multicall_umount(int argc, char **argv, char **envp)
 	return 0;
 }
 
+static const struct mutlicall_prog progs[] = {
+	{ "mount", prog_mount },
+	{ "umount", prog_umount },
+};
+
 int main (int argc, char **argv, char **envp)
 {
-	if (strcmp(argv[0], "mount") == 0)
-		return multicall_mount(argc, argv, envp);
-	else if (strcmp(argv[0], "umount") == 0)
-		return multicall_umount(argc, argv, envp);
+	MULTICALL_DISPATCH(argv[0], progs);
 
 	return 1;
 }
