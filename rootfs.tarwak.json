@@ -1,0 +1,88 @@
+{
+	"root": {
+		"entries": {
+                	"dev" : {
+				"type": "dir"
+			},
+			"bin" : {
+                        	"type": "dir",
+				"defaults": {
+					"mode": "0555"
+				},
+				"entries": {
+					"cat": { },
+					"cp": { },
+					"chmod": { },
+					"chown": { },
+					"df": { },
+					"dmesg": { },
+					"smolsh": { },
+					"sntp": { },
+					"xxd": { },
+					"man": { },
+					"less": { },
+					"uname": { },
+					"touch": { },
+					"kill": { },
+					"ls": { },
+					"ps": { },
+					"sha256sum": { },
+					"resolv": { },
+					"tftp": { },
+					"uname": { },
+					"ping": {
+						"xattrs": {
+							"security.capability": "cap_net_raw+ep"
+						}
+					},
+					"mount": { },
+					"umount": {
+						"type": "symlink",
+						"target": "/bin/mount"
+					},
+					"rmdir": {
+						"type": "symlink",
+						"target": "/bin/touch"
+					},
+					"mkdir": {
+						"type": "symlink",
+						"target": "/bin/touch"
+					},
+					"ln": {
+						"type": "symlink",
+						"target": "/bin/touch"
+					},
+					"rm": {
+						"type": "symlink",
+						"target": "/bin/touch"
+					}
+				}
+                	},
+                	"proc" : {
+				"type": "dir"
+			},
+                	"run" : {
+				"type": "dir"
+			},
+                	"sbin" : {
+				"type": "dir",
+				"defaults": {
+					"mode": "0500"
+				},
+				"entries": {
+					"getty": { },
+					"startup": { },
+					"sntp": { },
+					"dhcpc": { },
+					"init": { }
+				}
+			},
+                	"tmp" : {
+				"type": "dir"
+			},
+                	"sys" : {
+				"type": "dir"
+			}
+		}
+	}
+}

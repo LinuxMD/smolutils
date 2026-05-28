@@ -10,6 +10,11 @@ ifndef CROSS_COMPILE
 $(error Please pass CROSS_COMPILE with the prefix of you toolchain)
 endif
 
+# Make sure we know where tarwak is
+ifndef TARWAK
+$(error Please pass TARWAK with the path of your tarwak binary)
+endif
+
 CC=$(CROSS_COMPILE)gcc
 BFDLD=$(CROSS_COMPILE)ld.bfd
 STRIP=$(CROSS_COMPILE)strip
@@ -68,21 +73,5 @@ HEADERS = common.h \
 	  resolv.h \
 	  memfd.h \
 	  multicall.h
-
-rootskel:
-	mkdir -p rootskel/sys
-	mkdir -p rootskel/dev
-	mkdir -p rootskel/proc
-	mkdir -p rootskel/tmp
-	mkdir -p rootskel/run
-
-	mkdir -p rootskel/bin
-	ln -s touch rootskel/bin/mkdir
-	ln -s touch rootskel/bin/ln
-	ln -s touch rootskel/bin/rm
-	ln -s touch rootskel/bin/rmdir
-
-	ln -s mount rootskel/bin/umount
-	mkdir -p rootskel/sbin
 
 EROFS_CMD = mkfs.erofs -E force-inode-compact,all-fragments,dedupe -zlz4hc --tar

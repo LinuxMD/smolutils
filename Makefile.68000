@@ -53,10 +53,8 @@ USER_ELFS += $(addsuffix .68000.elf,$(PROGS_NET_USER))
 elfs: $(SYSTEM_ELFS) $(USER_ELFS)
 
 .PHONY: m68k.tar
-m68k.tar: rootskel elfs
-	tar -cf $@ --mode=755 --owner=root:0 --group=root:0 -C rootskel .
-	tar -rf $@ --mode=500 --owner=root:0 --group=root:0 --transform 's|^|sbin/|' --transform 's|\.68000\.elf||' $(SYSTEM_ELFS)
-	tar -rf $@ --mode=555 --owner=root:0 --group=root:0 --transform 's|^|bin/|' --transform 's|\.68000\.elf||' $(USER_ELFS)
+m68k.tar: rootfs.tarwak.json elfs
+	$(TARWAK) -i rootfs.tarwak.json -o $@ -b ./ -p "%s.68000.elf"
 
 .PHONY: m68k.erofs
 m68k.erofs: m68k.tar

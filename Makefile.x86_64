@@ -33,11 +33,8 @@ USER_ELFS += $(addsuffix .x86_64.elf,$(PROGS_NET_USER))
 elfs: $(SYSTEM_ELFS) $(USER_ELFS) lz4.x86_64.elf
 
 .PHONY: x86_64.tar
-x86_64.tar: elfs
-	tar -cf $@ --mode=755 --owner=root:0 --group=root:0 -C rootskel .
-	tar -rf $@ --mode=500 --owner=root:0 --group=root:0 --transform 's|^|sbin/|' --transform 's|\.x86_64\.elf||' $(SYSTEM_ELFS)
-	tar -rf $@ --mode=555 --owner=root:0 --group=root:0 --transform 's|^|bin/|' --transform 's|\.x86_64\.elf||' $(USER_ELFS) lz4.x86_64.elf
-
+x86_64.tar: rootfs.tarwak.json elfs
+        $(TARWAK) -i rootfs.tarwak.json -o $@ -b ./ -p "%s.x86_64.elf"
 
 .PHONY: x86_64.erofs
 x86_64.erofs: x86_64.tar

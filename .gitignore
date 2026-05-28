@@ -1,6 +1,6 @@
-init
-smolsh
 *.o
 *.gdb
 *.elf
 *.elf.dbg
+*.tar
+*.erofs
