@@ -4,7 +4,7 @@
 		"group": "root"
 	},
 	"root": {
-		"entries": {
+		"entities": {
                 	"dev" : {
 				"type": "dir"
 			},
@@ -14,7 +14,7 @@
 				"defaults": {
 					"mode": "0555"
 				},
-				"entries": {
+				"entities": {
 					"cat": { },
 					"cp": { },
 					"chmod": { },
@@ -74,7 +74,7 @@
 				"defaults": {
 					"mode": "0500"
 				},
-				"entries": {
+				"entities": {
 					"getty": { },
 					"startup": { },
 					"sntp": { },
