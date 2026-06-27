@@ -42,6 +42,23 @@ PROGS_USER =		\
 	df		\
 	mount
 
+# Make some warnings into errors because I am bad at the programming
+_COPTS =  -Werror=return-type
+_COPTS += -Werror=implicit-function-declaration
+_COPTS += -flto
+_COPTS += -ggdb -nostdlib -std=c99 -Os
+
+# Feature parsing
+
+fempty :=
+fspace := $(empty) $(empty)
+fcomma := ,
+
+DISABLE_LIST := $(subst $(fcomma),$(fspace),$(FEATURE_DISABLE))
+
+ifeq ($(filter net,$(DISABLE_LIST)),)
+_COPTS += -DCONFIG_NET=n
+else
 PROGS_NET_SYSTEM =	\
 	sntp		\
 	dhcpc
@@ -50,12 +67,8 @@ PROGS_NET_USER =	\
 	ping		\
 	resolv		\
 	tftp
-
-# Make some warnings into errors because I am bad at the programming
-_COPTS =  -Werror=return-type
-_COPTS += -Werror=implicit-function-declaration
-_COPTS += -flto
-_COPTS += -ggdb -nostdlib -std=c99 -Os
+_TARWAKFEATURES += -fnet
+endif
 
 COPTS= -include $(NOLIBCDIR)/nolibc.h \
 	-Wl,--hash-style=gnu \

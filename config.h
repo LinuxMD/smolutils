@@ -5,7 +5,10 @@
 
 /* This is like KConfig, but awful */
 #define CONFIG_DEBUG	y
+
+#ifndef CONFIG_NETWORK
 #define CONFIG_NETWORK	y
+#endif
 
 /* Magic */
 #define __ARG_PLACEHOLDER_y			0,
