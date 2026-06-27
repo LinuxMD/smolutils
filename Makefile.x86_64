@@ -34,7 +34,7 @@ elfs: $(SYSTEM_ELFS) $(USER_ELFS) lz4.x86_64.elf
 
 .PHONY: x86_64.tar
 x86_64.tar: rootfs.tarwak.json elfs
-        $(TARWAK) -i rootfs.tarwak.json -o $@ -b ./ -p "%s.x86_64.elf"
+	$(TARWAK) -i rootfs.tarwak.json -o $@ -b ./ -p "%s.x86_64.elf"
 
 .PHONY: x86_64.erofs
 x86_64.erofs: x86_64.tar
